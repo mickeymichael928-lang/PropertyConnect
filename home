@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DealLink TN – prototype</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f5f6f8;--card:#fff;--tx:#14181f;--mu:#5b6573;--bd:#d9dee5;--ac:#0b6e4f;--on:#fff;--acx:#e1f2ea;--wn:#fff3cf;--wnt:#5c3f00;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1318;--card:#171d25;--tx:#e8ecf1;--mu:#9aa5b3;--bd:#2a323d;--ac:#4cc79b;--on:#06261b;--acx:#143328;--wn:#3a2f10;--wnt:#f2d48a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1318;--card:#171d25;--tx:#e8ecf1;--mu:#9aa5b3;--bd:#2a323d;--ac:#4cc79b;--on:#06261b;--acx:#143328;--wn:#3a2f10;--wnt:#f2d48a;color-scheme:dark}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0}h2{font-size:19px;margin:0 0 6px}h3{font-size:16px;margin:18px 0 6px}
+.mu{color:var(--mu);font-size:14px;margin:2px 0}
+nav{display:flex;gap:6px;margin:12px 0;overflow-x:auto}
+.tab{border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--ac);color:var(--on);border-color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
+input,select{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--bd);background:var(--bg);color:var(--tx);padding:6px 12px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer}
+.chip.on{background:var(--acx);border-color:var(--ac);color:var(--ac);font-weight:600}
+.btn{margin-top:14px;background:var(--ac);color:var(--on);border:0;padding:11px 18px;border-radius:10px;font:inherit;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.link{background:none;border:0;color:var(--ac);font:inherit;cursor:pointer;padding:0;text-decoration:underline}
+.deal{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:var(--bg);border:1px solid var(--bd);color:var(--tx);border-radius:10px;padding:12px;margin-top:8px;font:inherit;cursor:pointer}
+.r{text-align:right}
+.note{background:var(--acx);border-radius:8px;padding:10px 12px;font-size:14px;margin-top:14px}
+.disc{background:var(--wn);color:var(--wnt);border:2px solid var(--wnt);border-radius:10px;padding:14px;font-size:18px;font-weight:700;line-height:1.4;margin:14px 0}
+.ck{display:flex;gap:10px;align-items:flex-start;color:var(--tx);font-size:15px;margin:10px 0}.ck input{width:auto;margin-top:4px}
+.badge{display:inline-block;font-size:12px;background:var(--acx);color:var(--ac);padding:2px 8px;border-radius:999px;font-weight:600}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:10px 0}.plan{text-align:left;background:var(--bg);border:2px solid var(--bd);color:var(--tx);border-radius:12px;padding:12px;font:inherit;cursor:pointer}.plan.on{border-color:var(--ac);background:var(--acx)}.plan b{font-size:17px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;max-width:90%;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+</style></head>
+<body><div class="wrap">
+<h1>DealLink TN</h1>
+<p class="mu">Clickable prototype with sample data. Tennessee wholesaling rules are built into the flow. Placeholder name.</p>
+<nav id="nav"></nav><main id="app"></main><div id="toast"></div></div>
+<script>
+const $=s=>document.querySelector(s),money=n=>'$'+Number(n).toLocaleString('en-US');
+const COUNTIES=['Davidson','Shelby','Knox','Hamilton','Rutherford','Montgomery','Sumner','Madison'];
+let box={counties:new Set(['Shelby','Knox','Hamilton']),maxPrice:200000,beds:3,maxFee:12000};
+let deals=[
+{id:1,county:'Shelby',city:'Memphis',price:118000,beds:3,baths:1,cond:'Light rehab',fee:8000,w:'Sample Wholesaler A'},
+{id:2,county:'Davidson',city:'Nashville',price:245000,beds:2,baths:1,cond:'Light rehab',fee:12000,w:'Sample Wholesaler B'},
+{id:3,county:'Knox',city:'Knoxville',price:165000,beds:3,baths:2,cond:'Move-in ready',fee:9000,w:'Sample Wholesaler C'},
+{id:4,county:'Hamilton',city:'Chattanooga',price:190000,beds:4,baths:2,cond:'Heavy rehab',fee:10000,w:'Sample Wholesaler A'},
+{id:5,county:'Montgomery',city:'Clarksville',price:175000,beds:3,baths:2,cond:'Move-in ready',fee:7500,w:'Sample Wholesaler D'}];
+let user=null,sub=null,off=0,view='signin',cur=null,showAll=false,nid=6;const FEE=500,unlocked=new Set();let plan='flex',used=8;const LIM=10,extra=()=>Math.max(0,used-LIM);
+const tabs=[['box','Landlord buy box'],['board','Deal board'],['post','Post a deal']];
+const fits=d=>box.counties.has(d.county)&&d.price<=box.maxPrice&&d.beds>=box.beds&&d.fee<=box.maxFee;
+function addBD(d,n){d=new Date(d);while(n>0){d.setDate(d.getDate()+1);if(d.getDay()%6)n--}return d}
+const fmt=d=>d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+function toast(t){const e=$('#toast');e.textContent=t;e.className='show';clearTimeout(toast.t);toast.t=setTimeout(()=>e.className='',4000)}
+
+const vBox=()=>`<section class="card"><h2>Your buy box</h2><p class="mu">Tell us what you want to buy. Deals that fit show up first.</p>
+<label>Counties</label><div class="chips">${COUNTIES.map(c=>`<button class="chip ${box.counties.has(c)?'on':''}" data-c="${c}">${c}</button>`).join('')}</div>
+<div class="row"><div><label>Max purchase price</label><input id="mp" type="number" step="5000" value="${box.maxPrice}"></div>
+<div><label>Min bedrooms</label><select id="mb">${[1,2,3,4].map(n=>`<option ${n==box.beds?'selected':''}>${n}</option>`).join('')}</select></div>
+<div><label>Max assignment fee</label><input id="mf" type="number" step="500" value="${box.maxFee}"></div></div>
+<p class="note"><b>${deals.filter(fits).length}</b> deals match right now. In the real app you’d get an email or text when a new one fits.</p>
+<button class="btn" data-v="board">See matching deals</button></section>`;
+
+const card=d=>`<button class="deal" data-d="${d.id}"><div><b>${d.city}, ${d.county} County</b><div class="mu">${d.beds} bd · ${d.baths} ba · ${d.cond}</div></div><div class="r"><b>${money(d.price)}</b><div class="mu">Fee ${money(d.fee)}</div></div></button>`;
+const vBoard=()=>{const l=deals.filter(d=>showAll||fits(d));return `<section class="card"><h2>Deal board</h2><p class="mu">${showAll?'Showing all deals':'Showing deals that fit your buy box'}. <button class="link" data-a="all">${showAll?'Show only matches':'Show all'}</button></p>${l.map(card).join('')||'<p>No matches yet. Try widening your buy box.</p>'}</section>`};
+
+const RULES=`<p class="note"><b>Tennessee rules built in</b> (summary of public sources, not legal advice): the wholesaler must disclose before signing that they intend to market their interest in the contract; the seller must get the assignment’s effective date at least 3 business days ahead; the disclosure goes in the written agreement in bold, large print; and a seller has two years from signing to sue. Wording here is a draft for a Tennessee attorney to review.</p>`;
+
+const vDeal=()=>{const d=deals.find(x=>x.id==cur);return `<section class="card"><button class="link" data-v="board">← Back to deals</button>
+<h2 style="margin-top:10px">${d.city}, ${d.county} County</h2>
+<p class="mu">${d.beds} bd · ${d.baths} ba · ${d.cond} · Listed by ${d.w}</p>
+<p><span class="badge">${d.nw?'Under contract (wholesaler attested)':'Under contract'}</span> ${unlocked.has(d.id)?`<b>Address: 214 Sample St, ${d.city}, TN</b>`:'<span class="mu">Address unlocks after you request an intro</span>'}</p>
+<div class="row"><div><label>Purchase price</label><b>${money(d.price)}</b></div><div><label>Assignment fee</label><b>${money(d.fee)}</b></div><div><label>Total to you</label><b>${money(d.price+d.fee)}</b></div></div>
+<div class="disc">Disclosure: The person listing this deal is a wholesaler. They hold a contract to buy this property and are not the owner. They intend to market their interest in that contract and may assign it to you for a fee. They may not be able to convey title.</div>
+<h3>Assignment timeline</h3><label>Date the seller receives written notice of the assignment date</label><input id="nd" type="date" value="${today()}">
+<p class="note" id="out"></p>
+${unlocked.has(d.id)?`<p class="note">Unlocked. The wholesaler has been notified and your 3-business-day assignment timeline can start.</p>`:`<button class="btn" data-a="unlock">Request intro</button>`}${RULES}</section>`};
+
+const now=()=>new Date(Date.now()+off*864e5),active=()=>!!sub&&sub.until>now(),left=()=>Math.max(0,Math.ceil((sub.until-now())/864e5));
+function renew(){while(sub&&sub.auto&&sub.until<=now()){sub.until=new Date(sub.until.getTime()+30*864e5);used=0}}
+const PL={ultimate:['Ultimate Plan',50,'Unlimited posts'],flex:['Flex Plan',25,'10 posts included, then $1 per extra post']};
+const vSign=()=>`<section class='card'><h2>Sign in</h2><p class='mu'>Demo sign-in: no password needed.</p><label>Email</label><input id='em' type='email' placeholder='you@example.com'><label>I am a</label><select id='rl'><option value='landlord'>Landlord</option><option value='wholesaler'>Wholesaler</option></select><button class='btn' data-a='in'>Sign in</button></section>`;
+const payUI=()=>`<h3>${sub?'Your subscription ended':'Choose a plan'}</h3><p class='mu'>Your plan turns on as soon as you pay and lasts 30 days. You can’t post until it’s active.</p><div class='plans'>${Object.entries(PL).map(([k,[n,p,t]])=>`<button class='plan ${plan==k?'on':''}' data-p='${k}'><b>${n}</b><div>$${p} / month</div><div class='mu'>${t}</div></button>`).join('')}</div><button class='btn' data-a='pay'>Pay $${PL[plan][1]} and start (renews every 30 days)</button><p class='mu'>Your plan renews automatically every 30 days at $${PL[plan][1]} until you turn off auto-renew on this page. You can turn it off anytime. Demo only: no real payment is taken.</p>`;
+const statusUI=()=>`<div class='note'><b>${PL[sub.plan][0]} is active</b>. ${sub.auto?`Renews automatically on ${fmt(sub.until)} for $${PL[sub.plan][1]}.`:`Auto-renew is off, so it ends on ${fmt(sub.until)}.`} (${left()} days left) <button class='link' data-a='auto'>${sub.auto?'Turn off auto-renew':'Turn on auto-renew'}</button><br>${sub.plan=='ultimate'?`${used} posts this month (sample). No limit.`:`${used} of ${LIM} included posts used (sample).${extra()?` Extra posts: ${extra()} = ${money(extra())}.`:''}`}<br><button class='link' data-a='skip'>Demo: jump 31 days ahead</button></div>`;
+const planUI=()=>sub&&active()?statusUI():payUI();
+const oldUI=()=>`<h3>Your plan</h3><div class="plans"><button class="plan ${plan=='ultimate'?'on':''}" data-p="ultimate"><b>Ultimate Plan</b><div>$50 / month</div><div class="mu">Unlimited posts</div></button><button class="plan ${plan=='flex'?'on':''}" data-p="flex"><b>Flex Plan</b><div>$25 / month</div><div class="mu">10 posts included, then $1 per extra post</div></button></div><p class="mu">${plan=='ultimate'?`${used} posts this month (sample). No limit.`:`${used} of ${LIM} included posts used this month (sample).${extra()?` Extra posts so far: ${extra()} = ${money(extra())}.`:''}`}</p>`;
+const ATT=['I have a signed purchase contract with the owner for this property.','My contract tells the seller, in bold, large print, that I intend to market my interest in it.','I will give the seller the assignment’s effective date at least 3 business days before it takes effect.'];
+const vPost=()=>`<section class="card"><h2>Post a deal</h2><p class="mu">For wholesalers. Landlords browse and request intros for free. The Tennessee checklist is part of posting.</p>${planUI()}<div id="pform"${active()?'':' hidden'}>
+<div class="row"><div><label>County</label><select id="pc">${COUNTIES.map(c=>`<option>${c}</option>`).join('')}</select></div><div><label>City</label><input id="pcity" placeholder="Memphis"></div><div><label>Purchase price</label><input id="pp" type="number" placeholder="150000"></div></div>
+<div class="row"><div><label>Beds</label><input id="pb" type="number" value="3"></div><div><label>Baths</label><input id="pba" type="number" value="1"></div><div><label>Condition</label><select id="pcd"><option>Move-in ready</option><option>Light rehab</option><option>Heavy rehab</option></select></div><div><label>Assignment fee</label><input id="pfee" type="number" placeholder="8000"></div></div>
+<h3>Tennessee checklist</h3>${ATT.map(t=>`<label class="ck"><input type="checkbox" class="a"><span>${t}</span></label>`).join('')}
+<button class="btn" id="pbtn" data-a="post" disabled>Post deal${plan=='flex'&&used>=LIM?' (+$1 extra post)':''}</button></div>${RULES}</section>`;
+
+function render(){renew();$('#nav').innerHTML=tabs.filter(t=>user&&(user.role=='landlord'?t[0]!='post':t[0]!='box')).map(([v,l])=>`<button class="tab ${view==v||(view=='deal'&&v=='board')?'on':''}" data-v="${v}">${l}</button>`).join('');
+if(user)$('#nav').innerHTML+=`<span class='mu' style='margin-left:auto;align-self:center;white-space:nowrap'>${user.email} ·</span><button class='link' data-a='out'>Sign out</button>`;
+$('#app').innerHTML=({signin:vSign,box:vBox,board:vBoard,post:vPost,deal:vDeal})[view]();if(view=='deal')calc();scrollTo(0,0)}
+function calc(){const v=$('#nd').value;if(!v){$('#out').textContent='';return}
+$('#out').innerHTML=`Earliest assignment effective date: <b>${fmt(addBD(new Date(v+'T12:00'),3))}</b><br><span class="mu">Counts 3 business days, skipping weekends. Holidays aren’t counted, so confirm the date with your attorney.</span>`}
+function chk(){const ok=[...document.querySelectorAll('.a')].every(x=>x.checked)&&$('#pcity').value.trim()&&+$('#pp').value>0&&+$('#pfee').value>0;$('#pbtn').disabled=!ok}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-v],[data-c],[data-d],[data-a],[data-p]');if(!t)return;const s=t.dataset;
+if(s.p){plan=s.p;render()}
+else if(s.v){view=s.v;cur=null;render()}
+else if(s.c){box.counties.has(s.c)?box.counties.delete(s.c):box.counties.add(s.c);render()}
+else if(s.d){cur=+s.d;view='deal';render()}
+else if(s.a=='all'){showAll=!showAll;render()}
+else if(s.a=='unlock'){unlocked.add(cur);render();toast('Intro requested. In the real app the wholesaler would get a message.')}
+else if(s.a=='in'){user={role:$('#rl').value,email:$('#em').value.trim()||'demo@example.com'};showAll=user.role=='wholesaler';view=user.role=='landlord'?'box':'post';render();if(user.role=='wholesaler')toast(active()?'Welcome back. Your plan is active.':'Pick a plan and pay to start posting.')}
+else if(s.a=='out'){user=null;view='signin';render()}
+else if(s.a=='pay'){sub={plan,auto:true,until:new Date(now().getTime()+30*864e5)};render();toast(PL[plan][0]+' activated for 30 days (demo).')}
+else if(s.a=='skip'){off+=31;render();toast(sub&&sub.auto?'31 days later. Auto-renewed for $'+PL[sub.plan][1]+' (demo).':'31 days later. The subscription has expired.')}
+else if(s.a=='auto'){sub.auto=!sub.auto;render();toast(sub.auto?'Auto-renew is on.':'Auto-renew is off. Your plan ends on the date shown.')}
+else if(s.a=='post'){const over=plan=='flex'&&used>=LIM;used++;deals.unshift({id:nid++,county:$('#pc').value,city:$('#pcity').value.trim(),price:+$('#pp').value,beds:+$('#pb').value,baths:+$('#pba').value,cond:$('#pcd').value,fee:+$('#pfee').value,w:'You',nw:1});view='board';showAll=true;render();toast(over?'Deal posted. $1 extra-post charge added to your next bill (demo).':'Deal posted with the Tennessee disclosure attached.')}});
+document.addEventListener('change',e=>{const i=e.target.id;
+if(i=='mp'){box.maxPrice=+e.target.value;render()}else if(i=='mb'){box.beds=+e.target.value;render()}else if(i=='mf'){box.maxFee=+e.target.value;render()}
+else if(e.target.closest('#pform'))chk()});
+document.addEventListener('input',e=>{if(e.target.id=='nd')calc();else if(e.target.closest('#pform'))chk()});
+render();
+</script></body></html>
